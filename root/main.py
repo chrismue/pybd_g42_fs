@@ -50,7 +50,7 @@ def measure(meas):
         # print("Measured.")
         if q.empty():
             yield from q.put((r,g,x,y,z))
-            print("Put In Queue")
+            # print("Put In Queue")
         yield
 
 
@@ -102,20 +102,53 @@ def serve_websocket(reader, writer):
     reader = yield from WSReader(reader, writer)
     writer = WSWriter(reader, writer)
 
-    while 1:
-        """
-        l = yield from reader.read(256)
-        print(l)
-        if l == b"\r":
-            await writer.awrite(b"\r\n")
-        else:
-            await writer.awrite(l)
-        """
-        if not q.empty():
-            print("NotEmpty")
-            r,g,x,y,z = yield from q.get()
-            await writer.awrite("%d,%d;%f,%f,%f" % (r,g,x,y,z))
-        yield
+    try:
+        while 1:
+            if not q.empty():
+                # print("NotEmpty")
+                r,g,x,y,z = yield from q.get()
+                await writer.awrite("%d,%d;%f,%f,%f" % (r,g,x,y,z))
+            yield
+    except Exception as e:
+        print("Exception in websocket: " + str(e))
+
+#
+# This is a picoweb example showing a centralized web page route
+# specification (classical Django style).
+#
+# import ure as re
+import picoweb
+
+
+def index(req, resp):
+    # You can construct an HTTP response completely yourself, having
+    # a full control of headers sent...
+    yield from resp.awrite("HTTP/1.0 200 OK\r\n")
+    yield from resp.awrite("Content-Type: text/html\r\n")
+    yield from resp.awrite("\r\n")
+    yield from resp.awrite('<html><meta http-equiv="refresh", content="0;URL=/static/index.html" /></html>')
+    yield from resp.awrite("Or my <a href='file'>source</a>.")
+
+
+def squares(req, resp):
+    # Or can use a convenience function start_response() (see its source for
+    # extra params it takes).
+    yield from picoweb.start_response(resp)
+    yield from app.render_template(resp, "squares.tpl", (req,))
+
+
+def hello(req, resp):
+    yield from picoweb.start_response(resp)
+    # Here's how you extract matched groups from a regex URI match
+    yield from resp.awrite("Hello " + req.url_match.group(1))
+
+
+ROUTES = [
+    # You can specify exact URI string matches...
+    ("/", index),
+    ("/squares", squares),
+    ("/file", lambda req, resp: (yield from app.sendfile(resp, "example_webapp.py")))
+]
 
 
 if __name__ == "__main__":
@@ -123,23 +156,56 @@ if __name__ == "__main__":
     meas = ThreadedMeasuring(tile)
     ap = AccessPoint()
 
-    #loop = uasyncio.get_event_loop()
-    # loop.create_task(uasyncio.start_server(echo, "127.0.0.1", 8081))
-    #loop.run_forever()
-    #loop.close()
-    
+    app = picoweb.WebApp(__name__, ROUTES)
+    # debug values:
+    # -1 disable all logging
+    # 0 (False) normal logging: requests and errors
+    # 1 (True) debug logging
+    # 2 extra debug logging
+    app.debug = -1
+
+    # print("My loop :-)")
     loop = uasyncio.get_event_loop()
-    # loop.create_task(uasyncio.start_server(echo, "192.168.4.1", 500))
-    loop.call_soon(uasyncio.start_server(serve, "192.168.4.1", 80))
+    # loop.call_soon(uasyncio.start_server(serve, "192.168.4.1", 80))
+
     loop.call_soon(uasyncio.start_server(serve_websocket, "192.168.4.1", 500))
     loop.create_task(measure(meas))
+    app.serve(loop, "192.168.4.1", 80)
     loop.run_forever()
     loop.close()
 
-    # webserver=DemoWebServer('www/', meas)
+    """
 
-    while True:
-        r,g,x,y,z = meas.run()
-        # webserver.measurement_callback(r,g,x,y,z)
+    serve(self, loop, host, port):
+    # Actually serve client connections. Subclasses may override this
+    # to e.g. catch and handle exceptions when dealing with server socket
+    # (which are otherwise unhandled and will terminate a Picoweb app).
+    # Note: name and signature of this method may change.
+    loop.create_task(asyncio.start_server(self._handle, host, port))
+    loop.run_forever()
 
-    print("Done.")
+
+def run(self, host="127.0.0.1", port=8081, debug=False, lazy_init=False, log=None):
+    if log is None and debug >= 0:
+        import ulogging
+        log = ulogging.getLogger("picoweb")
+        if debug > 0:
+            log.setLevel(ulogging.DEBUG)
+    self.log = log
+    gc.collect()
+    self.debug = int(debug)
+    self.init()
+    if not lazy_init:
+        for app in self.mounts:
+            app.init()
+    loop = asyncio.get_event_loop()
+    if debug > 0:
+        print("* Running on http://%s:%s/" % (host, port))
+    self.serve(loop, host, port)
+    loop.close()
+
+
+
+    app.run(host="192.168.4.1", port=80, debug=-1)
+
+"""

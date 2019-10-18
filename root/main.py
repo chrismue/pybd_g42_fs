@@ -11,7 +11,17 @@ import uasyncio
 from uasyncio.websocket.server import WSReader, WSWriter
 from uasyncio.queues import Queue
 
+import os
+
+import ure as re
+
 q = Queue()
+
+if pyb.SDCard().present():
+    os.mount(pyb.SDCard(), '/sd')
+    print("Mounted SD Card:")
+    print(os.listdir("/sd/"))
+    print(os.listdir("/sd/web"))
 
 
 class LedTile:
@@ -123,31 +133,13 @@ import picoweb
 def index(req, resp):
     # You can construct an HTTP response completely yourself, having
     # a full control of headers sent...
-    yield from resp.awrite("HTTP/1.0 200 OK\r\n")
-    yield from resp.awrite("Content-Type: text/html\r\n")
-    yield from resp.awrite("\r\n")
+    yield from resp.awrite("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n")
     yield from resp.awrite('<html><meta http-equiv="refresh", content="0;URL=/static/index.html" /></html>')
-    yield from resp.awrite("Or my <a href='file'>source</a>.")
-
-
-def squares(req, resp):
-    # Or can use a convenience function start_response() (see its source for
-    # extra params it takes).
-    yield from picoweb.start_response(resp)
-    yield from app.render_template(resp, "squares.tpl", (req,))
-
-
-def hello(req, resp):
-    yield from picoweb.start_response(resp)
-    # Here's how you extract matched groups from a regex URI match
-    yield from resp.awrite("Hello " + req.url_match.group(1))
 
 
 ROUTES = [
     # You can specify exact URI string matches...
-    ("/", index),
-    ("/squares", squares),
-    ("/file", lambda req, resp: (yield from app.sendfile(resp, "example_webapp.py")))
+    ("/", lambda req, resp: (yield from app.sendfile(resp, "static/index.html"))),
 ]
 
 

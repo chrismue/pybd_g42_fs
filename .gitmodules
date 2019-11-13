@@ -1,9 +1,9 @@
-[submodule "micropython-lib"]
-	path = micropython-lib
-	url = https://github.com/micropython/micropython-lib.git
-[submodule "tobbad"]
-	path = tobbad
-	url = https://github.com/tobbad/micropython_lib.git
 [submodule "picoweb"]
 	path = picoweb
-	url = https://github.com/pfalcon/picoweb.git
+	url = https://github.com/chrismue/picoweb.git
+[submodule "micropython-lib"]
+	path = micropython-lib
+	url = https://github.com/chrismue/micropython-lib
+[submodule "tobbad"]
+	path = tobbad
+	url = https://github.com/chrismue/micropython_lib.git

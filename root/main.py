@@ -3,7 +3,7 @@ import time
 
 import network
 
-from led36 import led36
+import led36
 from lsm9ds1 import LSM9DS1
 
 import micropython
@@ -22,16 +22,17 @@ if pyb.SDCard().present():
     print("Mounted SD Card:")
     print(os.listdir("/sd/"))
     print(os.listdir("/sd/web"))
-
+else:
+    print("No SD Card present!")
 
 class LedTile:
     def __init__(self):
-        self._tile = led36()
-        self._tile.brightness(100)
-        self._tile.illu(0, 0, 0)
+        print("INIT LEDTILE")
+        led36.brightness(100)
+        led36.illu(0, 0, 0)
 
     def set_color(self, r, g, b):
-        self._tile.illu(r, g, b)
+        led36.illu(r, g, b)
 
 
 class ThreadedMeasuring:
@@ -139,10 +140,10 @@ def index(req, resp):
 
 ROUTES = [
     # You can specify exact URI string matches...
-    ("/", lambda req, resp: (yield from app.sendfile(resp, "static/index.html"))),
+    ("/", lambda req, resp: (yield from app.sendfile(resp, "./www/index.html"))),
 ]
 
-
+print("STARTING")
 if __name__ == "__main__":
     tile = LedTile()
     meas = ThreadedMeasuring(tile)

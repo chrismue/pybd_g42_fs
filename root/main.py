@@ -18,6 +18,8 @@ measurement_queue = Queue()
 if pyb.SDCard().present():
     os.mount(pyb.SDCard(), '/sd')
     print("Mounted SD Card")
+    print("/sd:", os.listdir("/sd/"))
+    print("/sd/web:", os.listdir("/sd/web"))
 else:
     print("No SD Card present!")
 

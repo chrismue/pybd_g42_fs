@@ -10,3 +10,6 @@
 [submodule "web"]
 	path = web
 	url = https://github.com/DanielZ87/MicroPythonDemo_Flutter.git
+[submodule "presentation"]
+	path = presentation
+	url = https://github.com/chrismue/guild42_micropython_presentation.git

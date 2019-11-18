@@ -7,3 +7,6 @@
 [submodule "tobbad"]
 	path = tobbad
 	url = https://github.com/chrismue/micropython_lib.git
+[submodule "web"]
+	path = web
+	url = https://github.com/DanielZ87/MicroPythonDemo_Flutter.git
